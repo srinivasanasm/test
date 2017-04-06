@@ -1,0 +1,174 @@
+connect AWS url and credentials
+================================
+https://853656694980.signin.aws.amazon.com/console
+Username : awstrgjul
+Password : wipro@1234
+
+
+steps to connect emr using ssh
+===============================
+1. Start PuTTY.
+2. In the Category list, click Session
+3. In the Host Name field, type  hadoop@ec2-54-169-221-76.ap-southeast-1.compute.amazonaws.com
+4. In the Category list, expand Connection > SSH > Auth
+5. For Private key file for authentication, click Browse and select the private key file (awsjultrg.ppk) used to launch the cluster.
+6. In the Category list, expand Connection > SSH, and then click Tunnels.
+7. In the Source port field, type 8157 (a randomly chosen, unused local port).
+8. Select the Dynamic and Auto options.
+9. Leave the Destination field empty and click Add.
+10. Click Open.
+11. Click Yes to dismiss the security alert.
+12. Type hive in the CLI to get to hive shell
+
+
+
+
+
+word count using HiveQl
+=======================
+
+1. CREATE TABLE wordcount (line STRING);
+
+2. LOAD DATA LOCAL INPATH 'wordcount.txt' OVERWRITE INTO TABLE wordcount;
+
+
+
+3. CREATE TABLE word_counts AS SELECT word, count(1) AS count FROM (SELECT explode(split(line, ' ')) AS word FROM wordcount) w GROUP BY word ORDER BY word;
+
+4. select * from word_counts;
+
+
+
+JSON parson in Hive
+===================
+
+
+1. ADD JAR s3://wiprolearning/piyush/hive-serdes-1.0-SNAPSHOT.jar;
+
+2. CREATE EXTERNAL TABLE tweets1 (
+   id BIGINT,
+   created_at STRING,
+   source STRING,
+   favorited BOOLEAN,
+   retweet_count INT,
+   retweeted_status STRUCT<
+      text:STRING,
+      user:STRUCT<screen_name:STRING,name:STRING>>,
+   entities STRUCT<
+      urls:ARRAY<STRUCT<expanded_url:STRING>>,
+      user_mentions:ARRAY<STRUCT<screen_name:STRING,name:STRING>>,
+      hashtags:ARRAY<STRUCT<text:STRING>>>,
+   text STRING,
+   user STRUCT<
+      screen_name:STRING,
+      name:STRING,
+      friends_count:INT,
+      followers_count:INT,
+      statuses_count:INT,
+      verified:BOOLEAN,
+      utc_offset:INT,
+      time_zone:STRING>,
+   in_reply_to_screen_name STRING
+) 
+ROW FORMAT SERDE 'com.cloudera.hive.serde.JSONSerDe'
+LOCATION 's3://wiprolearning/piyush/json_data';
+
+
+Other hive query samples
+=========================
+
+1. create table in hive
+====================
+CREATE TABLE employee_copy
+(employee_id string,
+employee_name string,
+department_name string);
+
+
+2. create external table over a directory in HDFS
+==============================================
+
+CREATE EXTERNAL TABLE department
+(department_id string,
+department_name string)
+row format delimited
+fields terminated by ','
+stored as textfile
+LOCATION 's3://wiprolearning/piyush/department_sample';
+
+
+CREATE EXTERNAL TABLE employee
+(employee_id string,
+employee_name string,
+department_name string)
+row format delimited
+fields terminated by ','
+stored as textfile
+LOCATION 's3://wiprolearning/piyush/employee_sample';
+
+Hadoop fs -put <s3 folder> /home/hadoop/
+
+3. loading data into a existing table
+==================================
+LOAD DATA LOCAL INPATH 'employee.csv' INTO TABLE employee_copy;
+
+
+4. insert data into another table
+==============================
+insert into table employee_copy select * from employee;
+
+
+5. update data in a table
+======================
+update employee_copy set employee_name='piyush' where employee_id='1000';
+
+
+6. delete data from a table
+=========================
+DELETE FROM employee_copy where employee_id='1001';
+
+
+7. export data from a table to a file
+==================================
+EXPORT TABLE employee_copy  TO '/user/cloudera/dummy_data/import_data';
+
+
+8. import data to a table
+======================
+import table imported_employee from '/user/cloudera/dummy_data/import_data/data';
+
+
+9. group by in Hive
+================
+ select department_name,count(employee_id) from employee group by department_name;
+
+10. joins in Hive
+=============
+
+equality joins
+--------------
+select a.*, b.* from employee a join department b on (a.department_name=b.department_id);
+
+left outer join
+---------------
+select a.*, b.* from employee a left outer join department b on (a.department_name=b.department_id);
+
+right outer join
+----------------
+select a.*, b.* from employee a right outer join department b on (a.department_name=b.department_id);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
